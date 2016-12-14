@@ -3,8 +3,6 @@
 #include "Utils.h"
 #include "Sodaq_wdt.h"
 
-// TODO ask user if module should be treated as in normal (application) or bootloader mode
-// TODO ask user if debug should be on
 // TODO ask user if should erase blocks
 // TODO investigate larger writing blocks for higher speed
 
@@ -58,6 +56,8 @@ bool onPageStart(uint32_t startingAddress)
             return false;
         }
     }
+    
+    return true;
 }
 
 bool onPageComplete(uint32_t startingAddress, const uint8_t* buffer, size_t size)
@@ -101,29 +101,13 @@ void onHexParserProgress(size_t currentLine, size_t totalLines)
     }
 }
 
-void waitForUserKeyToContinue()
-{
-    consolePrintln("Please press a key to continue...");
-    
-    while (CONSOLE_STREAM.available() <= 0) {}
-    
-    CONSOLE_STREAM.read();
-}
-
 void setup()
 {
-    if (IsDebugOn) {
-        DEBUG_STREAM.begin(115200);
-        
-        bootloader.setDiag(DEBUG_STREAM);
-        hexParser.setDiag(DEBUG_STREAM);
-    }
+    sodaq_wdt_safe_delay(5000);
     
-    if (DEBUG_STREAM != CONSOLE_STREAM || !IsDebugOn) {
+    if (DEBUG_STREAM != CONSOLE_STREAM) {
         CONSOLE_STREAM.begin(115200);
     }
-    
-    sodaq_wdt_safe_delay(5000);
     
     consolePrintln("** SODAQ Firmware Updater **");
     consolePrint("Version ");
@@ -131,11 +115,45 @@ void setup()
     consolePrint(".");
     consolePrintln(VersionMinor);
     
+    consolePrintln("\nPress:");
+    consolePrintln(" - \'b\' to enable bootloader mode");
+    consolePrintln(" - \'d\' to enable debug");
+    
+    for (uint8_t i = 0; i < 5 * 4; i++) {
+        while (CONSOLE_STREAM.available() > 0) {
+            char c = CONSOLE_STREAM.read();
+            
+            if (c == 'b') {
+                shouldUseBootloaderMode = true;
+                
+                consolePrintln("\nBootloader mode is now enabled.");
+            }
+            
+            if (c == 'd') {
+                IsDebugOn = true;
+                
+                consolePrintln("\nDebug is now enabled.");
+            }
+        }
+        
+        sodaq_wdt_safe_delay(250);
+        consolePrint(".");
+    }
+    
+    consolePrintln();
+    
+    if (IsDebugOn) {
+        DEBUG_STREAM.begin(115200);
+        
+        bootloader.setDiag(DEBUG_STREAM);
+        hexParser.setDiag(DEBUG_STREAM);
+    }
+    
     hexParser.setPageStartCallback(onPageStart);
     hexParser.setPageCompleteCallback(onPageComplete);
     hexParser.setProgressCallback(onHexParserProgress);
     
-    consolePrintln("Starting HEX File Image Verification...");
+    consolePrintln("\n* Starting HEX File Image Verification...");
     
     // verify image first
     if (hexParser.verifyImageIntegrity()) {
@@ -145,7 +163,7 @@ void setup()
         consolePrintln("HEX File Image Verification Failed!");
         consolePrintln("Cannot continue with firmware update!");
         
-        while (true) {}
+        while (true) { }
     }
     
     bootloader.initBootloader(LORA_STREAM);
@@ -155,25 +173,31 @@ void loop()
 {
     if (shouldUseBootloaderMode) {
         LORA_STREAM.begin(bootloader.getDefaultBootloaderBaudRate());
+        sodaq_wdt_safe_delay(200);
         
         BootloaderVersionInfo versionInfo;
         
         if (bootloader.getVersionInfo(versionInfo)) {
-            consolePrintln("\nThe module is in Bootloader mode!");
+            consolePrintln("\n* The module is in Bootloader mode.");
             consolePrint("Bootloader Version: ");
             consolePrintln(versionInfo.BootloaderVersion, HEX);
             consolePrint("Device ID: ");
             consolePrintln(versionInfo.DeviceId, HEX);
             
-            consolePrintln("Starting firmware update...");
+            consolePrintln("\n* Starting firmware update...");
             
             if (hexParser.parseImage()) {
                 consolePrintln("Firmware update has finished successfully! Please unplug the module to restart.");
             }
+            else {
+                consolePrintln("Failed to upload the firmware. Please unplug and restart.");
+                
+                while (true) { }
+            }
             
             // consolePrintln("Resetting the module...");
             // bootloader.bootloaderReset();
-
+            
             shouldUseBootloaderMode = false;
         }
         else {
@@ -181,16 +205,20 @@ void loop()
         }
     }
     else {
-        LORA_STREAM.begin(bootloader.getDefaultBaudRate());
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
+        sodaq_wdt_safe_delay(200);
         
         if (bootloader.applicationReset()) {
-            consolePrintln("\nThe module is in Application mode!");
+            consolePrintln("\n* The module is in Application mode.");
             
-            consolePrintln("Ready to start firmware update...");
-            waitForUserKeyToContinue();
+            consolePrintln("Ready to start firmware update.");
+            consolePrintln("\nPlease press \'c\' to continue...");
+            
+            while (CONSOLE_STREAM.read() != 'c') { }
             
             consolePrintln("Erasing firmware and attempting to start bootloader...");
             bootloader.eraseFirmware();
+            sodaq_wdt_safe_delay(1000);
             
             shouldUseBootloaderMode = true;
         }

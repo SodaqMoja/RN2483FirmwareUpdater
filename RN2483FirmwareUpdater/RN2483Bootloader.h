@@ -4,9 +4,11 @@
 #define RN2483BOOTLOADER_H_
 
 #include "Arduino.h"
-#include "Sodaq_RN2483.h"
 
 // NOTE: Both the Bootloader and the ARM M0-based arduinos are little endian
+
+#define RN2483_BOOTLOADER_INPUT_BUFFER_SIZE 128
+#define RN2483_BOOTLOADER_DEFAULT_TIMEOUT 120
 
 struct BootloaderRecord {
     uint8_t AutoBaudChar;
@@ -60,12 +62,18 @@ struct BootloaderVersionInfo {
     uint8_t UserId4;
 };
 
-class Sodaq_RN2483Bootloader : public Sodaq_RN2483
+class Sodaq_RN2483Bootloader
 {
     public:
+        Sodaq_RN2483Bootloader();
+        
         uint32_t getDefaultBootloaderBaudRate() { return 38400; };
         
-        void initBootloader(SerialType& stream);
+        uint32_t getDefaultApplicationBaudRate() { return 57600; };
+        
+        void initBootloader(Uart& stream);
+        
+        void setDiag(Stream& stream) { diagStream = &stream; };
         
         void eraseFirmware();
         
@@ -81,7 +89,18 @@ class Sodaq_RN2483Bootloader : public Sodaq_RN2483
         
         bool applicationReset();
     private:
-    
+        Uart* loraStream;
+        
+        Stream* diagStream;
+        
+        uint16_t inputBufferSize;
+        
+        char inputBuffer[RN2483_BOOTLOADER_INPUT_BUFFER_SIZE];
+        
+        uint16_t readApplicationLn();
+        
+        bool expectApplicationString(const char* str, uint16_t timeout = RN2483_BOOTLOADER_DEFAULT_TIMEOUT);
+        
         int16_t readBootloaderResponse(BootloaderRecord& mainResponse, uint8_t* secondaryResponse, uint8_t secondaryResponseSize);
         
         void sendCommand(uint8_t command, uint8_t length = 0, uint32_t address = 0);

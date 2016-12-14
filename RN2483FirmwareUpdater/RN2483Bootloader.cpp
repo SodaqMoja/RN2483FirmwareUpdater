@@ -1,5 +1,6 @@
 #include "RN2483Bootloader.h"
 #include "StringLiterals.h"
+#include "Sodaq_wdt.h"
 #include <math.h>
 
 #define DEBUG_SYMBOLS_ON
@@ -13,23 +14,19 @@
 #define debugPrint(...)
 #endif
 
-void Sodaq_RN2483Bootloader::initBootloader(SerialType& stream)
+Sodaq_RN2483Bootloader::Sodaq_RN2483Bootloader():
+    loraStream(0),
+    diagStream(0),
+    inputBufferSize(RN2483_BOOTLOADER_INPUT_BUFFER_SIZE)
+{
+
+}
+
+void Sodaq_RN2483Bootloader::initBootloader(Uart& stream)
 {
     debugPrintLn("[initBootloader]");
     
     this->loraStream = &stream;
-    
-    #ifdef USE_DYNAMIC_BUFFER
-    
-    // make sure the buffers are only initialized once
-    if (!isBufferInitialized) {
-        this->inputBuffer = static_cast<char*>(malloc(this->inputBufferSize));
-        this->receivedPayloadBuffer = static_cast<char*>(malloc(this->receivedPayloadBufferSize));
-        
-        isBufferInitialized = true;
-    }
-    
-    #endif
 }
 
 void Sodaq_RN2483Bootloader::eraseFirmware()
@@ -95,7 +92,7 @@ void Sodaq_RN2483Bootloader::getChecksum()
     // sendCommand(CalculateChecksumCommand, Length (from address), Address)
 }
 
-inline void printToLength(SerialType& stream, const uint8_t* buffer, size_t length)
+inline void printToLength(Stream& stream, const uint8_t* buffer, size_t length)
 {
     for (uint8_t i = 0; i < length; i++) {
         stream.print(i, DEC);
@@ -130,10 +127,71 @@ void Sodaq_RN2483Bootloader::bootloaderReset()
     // no response
 }
 
+uint16_t Sodaq_RN2483Bootloader::readApplicationLn()
+{
+    int len = this->loraStream->readBytesUntil('\n', this->inputBuffer, this->inputBufferSize);
+    
+    if (len > 0) {
+        this->inputBuffer[len - 1] = 0; // bytes until \n always end with \r, so get rid of it (-1)
+    }
+    
+    return len;
+}
+
+bool Sodaq_RN2483Bootloader::expectApplicationString(const char* str, uint16_t timeout)
+{
+    debugPrint("[expectApplicationString] expecting ");
+    debugPrint(str);
+    
+    unsigned long start = millis();
+    
+    while (millis() < start + timeout) {
+        sodaq_wdt_reset();
+        debugPrint(".");
+        
+        if (readApplicationLn() > 0) {
+            debugPrint("(");
+            debugPrint(this->inputBuffer);
+            debugPrint(")");
+            
+            if (strstr(this->inputBuffer, str) != NULL) {
+                debugPrintLn(" found a match!");
+                
+                return true;
+            }
+            
+            return false;
+        }
+    }
+    
+    return false;
+}
+
 bool Sodaq_RN2483Bootloader::applicationReset()
 {
     debugPrintLn("[applicationReset]");
-    return resetDevice();
+    
+    this->loraStream->print("sys reset\r\n");
+    
+    if (expectApplicationString("RN")) {
+        if (strstr(this->inputBuffer, "RN2483") != NULL) {
+            debugPrintLn("The device type is RN2483");
+            
+            return true;
+        }
+        else if (strstr(this->inputBuffer, "RN2903") != NULL) {
+            debugPrintLn("The device type is RN2903");
+            
+            return true;
+        }
+        else {
+            debugPrintLn("Unknown device type!");
+            
+            return false;
+        }
+    }
+    
+    return false;
 }
 
 // returns -2 in case of error, -1 if no response at all, 0 if only mainResponse, or the lenth of the secondary response otherwise
@@ -146,7 +204,7 @@ int16_t Sodaq_RN2483Bootloader::readBootloaderResponse(BootloaderRecord& mainRes
     #ifdef DEBUG_SYMBOLS_ON
     
     if (this->diagStream) {
-        printToLength((SerialType&)(*diagStream), (uint8_t*)&mainResponse, sizeof(mainResponse));
+        printToLength((Stream&)(*diagStream), (uint8_t*)&mainResponse, sizeof(mainResponse));
     }
     
     #endif
@@ -168,7 +226,7 @@ int16_t Sodaq_RN2483Bootloader::readBootloaderResponse(BootloaderRecord& mainRes
     #ifdef DEBUG_SYMBOLS_ON
     
     if (this->diagStream) {
-        printToLength((SerialType&)(*diagStream), (uint8_t*)secondaryResponse, len);
+        printToLength((Stream&)(*diagStream), (uint8_t*)secondaryResponse, len);
     }
     
     #endif
