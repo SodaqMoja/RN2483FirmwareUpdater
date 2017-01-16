@@ -1,5 +1,4 @@
 #include "RN2483Bootloader.h"
-#include "StringLiterals.h"
 #include "Sodaq_wdt.h"
 #include <math.h>
 
@@ -34,7 +33,7 @@ void Sodaq_RN2483Bootloader::eraseFirmware()
     debugPrintLn("[eraseFirmware]");
     
     this->loraStream->print("sys eraseFW");
-    this->loraStream->print(CRLF);
+    this->loraStream->print("\r\n");
     this->loraStream->flush();
 }
 
