@@ -2,6 +2,7 @@
 #include "IntelHexParser.h"
 #include "Utils.h"
 #include "Sodaq_wdt.h"
+#include "HexFileImage.h"
 
 // TODO ask user if should erase blocks
 // TODO investigate larger writing blocks for higher speed
@@ -25,7 +26,7 @@
 #define consolePrint(...) { CONSOLE_STREAM.print(__VA_ARGS__); }
 
 const uint8_t VersionMajor = 1;
-const uint8_t VersionMinor = 2;
+const uint8_t VersionMinor = 3;
 const uint8_t PageSize = 64;
 
 Sodaq_RN2483Bootloader bootloader;
@@ -208,10 +209,14 @@ void loop()
         LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
         sodaq_wdt_safe_delay(200);
         
-        if (bootloader.applicationReset()) {
-            consolePrintln("\n* The module is in Application mode.");
-            
-            consolePrintln("Ready to start firmware update.");
+        char applicationResetResponse[64];
+        if (bootloader.applicationReset(applicationResetResponse, sizeof(applicationResetResponse))) {
+            consolePrintln("\n* The module is in Application mode: ");
+            consolePrintln(applicationResetResponse);
+
+            consolePrintln("\nReady to start firmware update...");
+            consolePrint("Firmware Image: ");
+            consolePrintln(HexFileImageName);
             consolePrintln("\nPlease press \'c\' to continue...");
             
             while (CONSOLE_STREAM.read() != 'c') { }

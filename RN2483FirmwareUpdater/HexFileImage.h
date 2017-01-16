@@ -1,9 +1,13 @@
 #ifndef _HEX_FILE_IMAGE_H_
 #define _HEX_FILE_IMAGE_H_
 
-#define HexFileImage HexFileImage101
+#define HexFileImage RN2483_101
 
-const char* const HexFileImage101[] = { 
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+#define HexFileImageName STR(HexFileImage)
+
+const char* const RN2483_101[] = { 
     ":10030000F5EF01F0FFFFFFFFE1CF28F0E2CF29F08A",
     ":10031000D9CF2AF0DACF2BF0F3CF2CF0F4CF2DF099",
     ":10032000F6CF2EF0F7CF2FF0F8CF30F0F5CF31F039",

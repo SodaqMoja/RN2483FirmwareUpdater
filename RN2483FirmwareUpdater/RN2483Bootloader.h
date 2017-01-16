@@ -87,7 +87,9 @@ class Sodaq_RN2483Bootloader
         
         void bootloaderReset();
         
-        bool applicationReset();
+        bool applicationReset(char* deviceResponseBuffer, size_t size);
+
+        bool applicationReset() { return applicationReset(0, 0); };
     private:
         Uart* loraStream;
         

@@ -167,21 +167,20 @@ bool Sodaq_RN2483Bootloader::expectApplicationString(const char* str, uint16_t t
     return false;
 }
 
-bool Sodaq_RN2483Bootloader::applicationReset()
+bool Sodaq_RN2483Bootloader::applicationReset(char* deviceResponseBuffer, size_t size)
 {
     debugPrintLn("[applicationReset]");
     
     this->loraStream->print("sys reset\r\n");
     
     if (expectApplicationString("RN")) {
-        if (strstr(this->inputBuffer, "RN2483") != NULL) {
-            debugPrintLn("The device type is RN2483");
-            
-            return true;
-        }
-        else if (strstr(this->inputBuffer, "RN2903") != NULL) {
-            debugPrintLn("The device type is RN2903");
-            
+        if ((strstr(this->inputBuffer, "RN2483") != NULL) || (strstr(this->inputBuffer, "RN2903") != NULL)) {
+            if (deviceResponseBuffer && (size > strlen(this->inputBuffer))) {
+                debugPrintLn("Copying the response to the given buffer.");
+                memcpy(deviceResponseBuffer, this->inputBuffer, min(size, inputBufferSize));
+                deviceResponseBuffer[min(size, inputBufferSize)] = '\0'; // make sure the string is terminated
+            }
+
             return true;
         }
         else {
