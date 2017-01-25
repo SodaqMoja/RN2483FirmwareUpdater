@@ -211,15 +211,46 @@ int16_t Sodaq_RN2483Bootloader::readBootloaderResponse(BootloaderRecord& mainRes
         debugPrintLn("No response received at all!");
         return -1;
     }
-    
-    if (mainResponse.Length > secondaryResponseSize) {
+
+    uint8_t expectLen = 0;
+
+    switch (mainResponse.Command) {
+      case ReadFlashCommand :
+      case ReadEeCommand :
+      case ReadConfigurationWordsCommand :
+        expectLen = mainResponse.Length;
+        break;
+            
+      case WriteFlashCommand :
+      case EraseFlashCommand :
+      case WriteEeCommand :
+      case WriteConfigurationWordsCommand :
+        expectLen = 1;
+        break;
+
+      // Documentation is unclear, it shows a 2 byte checksum in the
+      // repsonse, but also mentions a 'status'?
+      case CalculateChecksumCommand :
+        expectLen = 3; 
+        break;
+
+      // These will read until a time out.
+      // GetVersionInfoCommand does not send the length of the 
+      // response as per documentation.
+      case GetVersionInfoCommand : 
+      case ResetDeviceCommand :
+        expectLen = secondaryResponseSize;
+        break;
+    }
+ 
+    if (expectLen > secondaryResponseSize) {
         debugPrintLn("The secondary response cannot fit in the buffer!");
         this->loraStream->flush();
         
         return -2;
     }
-    
-    len = this->loraStream->readBytes(secondaryResponse, secondaryResponseSize);
+
+    len = this->loraStream->readBytes(secondaryResponse, expectLen);
     
     #ifdef DEBUG_SYMBOLS_ON
     
