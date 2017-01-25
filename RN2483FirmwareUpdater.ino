@@ -173,6 +173,8 @@ void setup()
 void loop()
 {
     if (shouldUseBootloaderMode) {
+        uint32_t startMS = millis();
+        
         LORA_STREAM.begin(bootloader.getDefaultBootloaderBaudRate());
         sodaq_wdt_safe_delay(200);
         
@@ -204,6 +206,8 @@ void loop()
         else {
             consolePrintln("The module did not respond in bootloader mode. Please unplug and retry in application mode.");
         }
+
+        consolePrintln("Elapsed Time: " + String((float)(millis() - startMS) / 1000) + "s");
     }
     else {
         LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
