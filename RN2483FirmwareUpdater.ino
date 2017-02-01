@@ -9,9 +9,14 @@
 
 #define DEBUG_SYMBOLS_ON
 
-#define CONSOLE_STREAM SerialUSB
-#define DEBUG_STREAM SerialUSB
+#define CONSOLE_STREAM SERIAL_PORT_MONITOR
+#define DEBUG_STREAM SERIAL_PORT_MONITOR
+
+#if defined(ARDUINO_SODAQ_EXPLORER)
+#define LORA_STREAM Serial2
+#elif defined(ARDUINO_SODAQ_AUTONOMO) || defined(ARDUINO_SODAQ_ONE) || defined(ARDUINO_SODAQ_ONE_BETA)
 #define LORA_STREAM Serial1
+#endif
 
 #ifdef DEBUG_SYMBOLS_ON
 #define debugPrintln(...) { if (IsDebugOn) DEBUG_STREAM.println(__VA_ARGS__); }
@@ -104,6 +109,12 @@ void onHexParserProgress(size_t currentLine, size_t totalLines)
 
 void setup()
 {
+    // Enable LoRaBee on Autonomo
+    #if defined(ARDUINO_SODAQ_AUTONOMO)
+    pinMode(BEE_VCC, OUTPUT);
+    digitalWrite(BEE_VCC, HIGH); //set input power BEE high
+    #endif
+
     sodaq_wdt_safe_delay(5000);
     
     if (DEBUG_STREAM != CONSOLE_STREAM) {
