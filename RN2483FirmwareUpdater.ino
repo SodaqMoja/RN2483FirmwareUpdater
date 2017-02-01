@@ -19,8 +19,8 @@
 #endif
 
 #ifdef DEBUG_SYMBOLS_ON
-#define debugPrintln(...) { if (IsDebugOn) DEBUG_STREAM.println(__VA_ARGS__); }
-#define debugPrint(...) { if (IsDebugOn) DEBUG_STREAM.print(__VA_ARGS__); }
+#define debugPrintln(...) { if (isDebugOn) DEBUG_STREAM.println(__VA_ARGS__); }
+#define debugPrint(...) { if (isDebugOn) DEBUG_STREAM.print(__VA_ARGS__); }
 #warning "Debug mode is ON"
 #else
 #define debugPrintLn(...)
@@ -31,14 +31,14 @@
 #define consolePrint(...) { CONSOLE_STREAM.print(__VA_ARGS__); }
 
 const uint8_t VersionMajor = 1;
-const uint8_t VersionMinor = 3;
+const uint8_t VersionMinor = 4;
 const uint8_t PageSize = 64;
 
 Sodaq_RN2483Bootloader bootloader;
 IntelHexParser hexParser(PageSize);
 
-bool IsDebugOn = false;
-bool ShouldEraseBlocks = true;
+bool isDebugOn = false;
+bool shouldEraseBlocks = true;
 int8_t lastHexParserProgressPercent = -1;
 bool shouldUseBootloaderMode = false;
 
@@ -48,7 +48,7 @@ void onHexParserProgress(size_t currentLine, size_t totalLines);
 
 bool onPageStart(uint32_t startingAddress)
 {
-    if (ShouldEraseBlocks) {
+    if (shouldEraseBlocks) {
         if (bootloader.eraseFlash(startingAddress, 1)) {
             debugPrint("Successfully erased block starting at 0x");
             debugPrintln(startingAddress, HEX);
@@ -142,7 +142,7 @@ void setup()
             }
             
             if (c == 'd') {
-                IsDebugOn = true;
+                isDebugOn = true;
                 
                 consolePrintln("\nDebug is now enabled.");
             }
@@ -154,7 +154,7 @@ void setup()
     
     consolePrintln();
     
-    if (IsDebugOn) {
+    if (isDebugOn) {
         DEBUG_STREAM.begin(115200);
         
         bootloader.setDiag(DEBUG_STREAM);
