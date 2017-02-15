@@ -2,6 +2,7 @@
 #include "IntelHexParser.h"
 #include "Utils.h"
 #include "Sodaq_wdt.h"
+
 #include "HexFileImage.h"
 
 // TODO ask user if should erase blocks
@@ -29,6 +30,11 @@
 
 #define consolePrintln(...) { CONSOLE_STREAM.println(__VA_ARGS__); }
 #define consolePrint(...) { CONSOLE_STREAM.print(__VA_ARGS__); }
+
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
+#define HexFileImageName STR(HexFileImage)
 
 const uint8_t VersionMajor = 1;
 const uint8_t VersionMinor = 4;
