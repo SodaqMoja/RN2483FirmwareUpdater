@@ -171,8 +171,11 @@ bool Sodaq_RN2483Bootloader::applicationReset(char* deviceResponseBuffer, size_t
     debugPrintLn("[applicationReset]");
     
     this->loraStream->print("sys reset\r\n");
-    
+
+    sodaq_wdt_safe_delay(100);
+
     if (expectApplicationString("RN")) {
+        debugPrintLn("[RN Module]");
         if ((strstr(this->inputBuffer, "RN2483") != NULL) || (strstr(this->inputBuffer, "RN2903") != NULL)) {
             if (deviceResponseBuffer && (size > strlen(this->inputBuffer))) {
                 debugPrintLn("Copying the response to the given buffer.");
