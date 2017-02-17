@@ -227,6 +227,14 @@ void loop()
         consolePrintln("Elapsed Time: " + String((float)(millis() - startMS) / 1000) + "s");
     }
     else {
+#ifdef LORA_RESET
+        pinMode(LORA_RESET, OUTPUT);
+        digitalWrite(LORA_RESET, LOW);
+        delay(100);
+        digitalWrite(LORA_RESET, HIGH);
+        delay(100);
+#endif
+
         LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
         sodaq_wdt_safe_delay(200);
         
