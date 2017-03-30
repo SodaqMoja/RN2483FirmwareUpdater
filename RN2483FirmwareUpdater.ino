@@ -121,6 +121,16 @@ void setup()
     digitalWrite(BEE_VCC, HIGH); //set input power BEE high
     #endif
 
+    #if defined(LORA_RESET)
+    pinMode(LORA_RESET, OUTPUT);
+    digitalWrite(LORA_RESET, HIGH);
+    sodaq_wdt_safe_delay(100);
+    digitalWrite(LORA_RESET, LOW);
+    sodaq_wdt_safe_delay(100);
+    digitalWrite(LORA_RESET, HIGH);
+    sodaq_wdt_safe_delay(100);
+    #endif
+
     sodaq_wdt_safe_delay(5000);
     
     if (DEBUG_STREAM != CONSOLE_STREAM) {
@@ -227,16 +237,16 @@ void loop()
         consolePrintln("Elapsed Time: " + String((float)(millis() - startMS) / 1000) + "s");
     }
     else {
-#ifdef LORA_RESET
-        pinMode(LORA_RESET, OUTPUT);
+        #if defined(LORA_RESET)
         digitalWrite(LORA_RESET, LOW);
-        delay(100);
+        sodaq_wdt_safe_delay(100);
         digitalWrite(LORA_RESET, HIGH);
-        delay(100);
-#endif
-
+        sodaq_wdt_safe_delay(1000);
+        #endif
+        LORA_STREAM.end();
         LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
-        sodaq_wdt_safe_delay(200);
+        sodaq_wdt_safe_delay(100);
+        LORA_STREAM.flush();
         
         char applicationResetResponse[64];
         if (bootloader.applicationReset(applicationResetResponse, sizeof(applicationResetResponse))) {
