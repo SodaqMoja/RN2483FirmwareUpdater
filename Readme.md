@@ -4,18 +4,27 @@ Note: to be able to compile this application you need to add the right board fil
 
 Go to File, Preferences and set the following URL for the additional board files:
 
-http://downloads.sodaq.net/package_sodaq_index.json
+http://downloads.sodaq.net/package_sodaq_samd_index.json
 
 ## Hex Image Selection
 
-In HexFileImage.h you can set which hex file image should be included in the firmware, to be used for updating the module:
+In HexFileImage.h you can set which hex file image should be included in
+the firmware, to be used for updating the module:
 ````C
-#define HexFileImage RN2483_101
+//#define HEXFILE_RN2483_101
+//#define HEXFILE_RN2483_103
+//#define HEXFILE_RN2903AU_097rc7
+//#define HEXFILE_RN2903_098
 ````
 
-Currently there is only one choice (RN2483_101) for version 1.0.1 of the RN2483 firmware.
+You have to uncomment one of these lines to select the required firmware.
 
-You can include any other firmware hex file by opening the hex file in the text editor of your choice (which should support columns) and adding a double quote at the beginning of each line and a double quote and a comma at the end of the line like this:
+## Other Firmware
+
+You can include any other firmware hex file by opening the hex file in the
+text editor of your choice (which should support columns) and adding a
+double quote at the beginning of each line and a double quote and a comma
+at the end of the line like this:
 ```
 ...
 :10030000D7EF01F0FFFFFFFF5A82FACF2AF0FBCFB1
@@ -48,11 +57,11 @@ and append the code into HexFileImage.h.
 
 After compiling the source code and uploading it to the board you will be able to start the process using a serial terminal.
 
-Just open the Arduino Serial Monitor (at 9600 baud) and you will see this:
+Just open the Arduino Serial Monitor (at 115200 baud) and you will see this:
 
 ```
 ** SODAQ Firmware Updater **
-Version 1.3
+Version 1.4
 
 Press:
 - 'b' to enable bootloader mode
@@ -66,7 +75,7 @@ Then, the hex file image will be verified while showing the progress:
 
 ```
 ** SODAQ Firmware Updater **
-Version 1.3
+Version 1.4
 
 Press:
  - 'b' to enable bootloader mode
