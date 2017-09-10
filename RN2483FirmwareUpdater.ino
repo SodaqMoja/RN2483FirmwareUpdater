@@ -10,12 +10,32 @@
 
 #define DEBUG_SYMBOLS_ON
 
+
+#if defined (ARDUINO_ARCH_ESP32)
+#define CONSOLE_STREAM Serial
+#define DEBUG_STREAM Serial
+
+#elif defined (ARDUINO_SAMD_ZERO)
+#define CONSOLE_STREAM SerialUSB
+#define DEBUG_STREAM SerialUSB
+
+#else
 #define CONSOLE_STREAM SERIAL_PORT_MONITOR
 #define DEBUG_STREAM SERIAL_PORT_MONITOR
+#endif
 
 #if defined(ARDUINO_SODAQ_EXPLORER)
 #define LORA_STREAM Serial2
+
 #elif defined(ARDUINO_SODAQ_AUTONOMO) || defined(ARDUINO_SODAQ_ONE) || defined(ARDUINO_SODAQ_ONE_BETA)
+#define LORA_STREAM Serial1
+
+#elif defined(ARDUINO_SAMD_ZERO) 
+#define LORA_STREAM Serial
+#define LORA_RESET 6
+
+#elif defined(ARDUINO_ARCH_ESP32) 
+HardwareSerial Serial1(1);  // UART1/Serial1 
 #define LORA_STREAM Serial1
 #endif
 
