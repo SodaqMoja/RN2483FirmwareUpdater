@@ -11,25 +11,28 @@
 #define DEBUG_SYMBOLS_ON
 
 
-#if defined (ARDUINO_ARCH_ESP32)
-#define CONSOLE_STREAM Serial
-#define DEBUG_STREAM Serial
-
-#elif defined (ARDUINO_SAMD_ZERO)
+#if defined (ARDUINO_SAMD_ZERO)
 #define CONSOLE_STREAM SerialUSB
 #define DEBUG_STREAM SerialUSB
+
+#elif defined (ARDUINO_ARCH_ESP32)
+#define CONSOLE_STREAM Serial
+#define DEBUG_STREAM Serial
 
 #else
 #define CONSOLE_STREAM SERIAL_PORT_MONITOR
 #define DEBUG_STREAM SERIAL_PORT_MONITOR
 #endif
 
+// keep testing SODAQ boards at the begining s
 #if defined(ARDUINO_SODAQ_EXPLORER)
 #define LORA_STREAM Serial2
 
+// keep testing SODAQ boards at the begining since they can also be Zero boards
 #elif defined(ARDUINO_SODAQ_AUTONOMO) || defined(ARDUINO_SODAQ_ONE) || defined(ARDUINO_SODAQ_ONE_BETA)
 #define LORA_STREAM Serial1
 
+// Now other Zero boards
 #elif defined(ARDUINO_SAMD_ZERO) 
 #define LORA_STREAM Serial
 #define LORA_RESET 6
