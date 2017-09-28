@@ -35,8 +35,12 @@
 #define LORA_RESET 6
 
 #elif defined(ARDUINO_ARCH_ESP32) 
-HardwareSerial Serial1(1);  // UART1/Serial1 
+// Serial1 on ESP32 default Serial1 pins are for SPI Flash
+// can't be used as is without remap, here use Serial2 GPIO16/17
+HardwareSerial Serial1(1); // using Hardware UART Serial1 
 #define LORA_STREAM Serial1
+#define LORA_RESET 4
+
 #endif
 
 #ifdef DEBUG_SYMBOLS_ON
@@ -143,25 +147,43 @@ void setup()
 
     #if defined(LORA_RESET)
     pinMode(LORA_RESET, OUTPUT);
-    digitalWrite(LORA_RESET, HIGH);
-    sodaq_wdt_safe_delay(100);
     digitalWrite(LORA_RESET, LOW);
     sodaq_wdt_safe_delay(100);
     digitalWrite(LORA_RESET, HIGH);
     sodaq_wdt_safe_delay(100);
     #endif
 
+    #if defined (ARDUINO_ARCH_ESP32)
+        CONSOLE_STREAM.begin(115200);
+    #else
+
     sodaq_wdt_safe_delay(5000);
-    
+
     if (DEBUG_STREAM != CONSOLE_STREAM) {
         CONSOLE_STREAM.begin(115200);
     }
+    #endif
     
-    consolePrintln("** SODAQ Firmware Updater **");
+    consolePrint("** ");
+
+#if defined(HEXFILE_RN2483_101)
+    consolePrint("RN2483 V1.0.1");
+#elif defined(HEXFILE_RN2483_103)
+    consolePrint("RN2483 V1.0.3");
+#elif defined(HEXFILE_RN2903AU_097rc7)
+    consolePrint("RN2903 V0.9.7");
+#elif defined(HEXFILE_RN2903_098)
+    consolePrint("RN2903 V0.9.8");
+#else
+    consolePrint("Unknown");
+#endif
+
+    consolePrintln(" Firmware Updater **");
     consolePrint("Version ");
     consolePrint(VersionMajor);
     consolePrint(".");
     consolePrintln(VersionMinor);
+
     
     consolePrintln("\nPress:");
     consolePrintln(" - \'b\' to enable bootloader mode");
@@ -221,8 +243,9 @@ void loop()
 {
     if (shouldUseBootloaderMode) {
         uint32_t startMS = millis();
-        
+
         LORA_STREAM.begin(bootloader.getDefaultBootloaderBaudRate());
+
         sodaq_wdt_safe_delay(200);
         
         BootloaderVersionInfo versionInfo;
@@ -257,16 +280,22 @@ void loop()
         consolePrintln("Elapsed Time: " + String((float)(millis() - startMS) / 1000) + "s");
     }
     else {
+
         #if defined(LORA_RESET)
+        consolePrint("Reseting module with PIN ");
+        consolePrintln(LORA_RESET);
         digitalWrite(LORA_RESET, LOW);
         sodaq_wdt_safe_delay(100);
         digitalWrite(LORA_RESET, HIGH);
         sodaq_wdt_safe_delay(1000);
         #endif
         LORA_STREAM.end();
-        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
-        sodaq_wdt_safe_delay(100);
         LORA_STREAM.flush();
+
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate(), SERIAL_8N1, 17, 16);
+        //Serial2.begin(9600, SERIAL_8N2, 16, 17)
+        sodaq_wdt_safe_delay(100);
+
         
         char applicationResetResponse[64];
         if (bootloader.applicationReset(applicationResetResponse, sizeof(applicationResetResponse))) {
@@ -288,6 +317,7 @@ void loop()
         }
         else {
             consolePrintln("The module did not respond in application mode. Please unplug and retry in bootloader mode.");
+            consolePrintln(applicationResetResponse);
         }
     }
 }
