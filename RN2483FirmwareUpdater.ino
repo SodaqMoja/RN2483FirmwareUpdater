@@ -36,8 +36,10 @@
 
 #elif defined(ARDUINO_ARCH_ESP32) 
 // Serial1 on ESP32 default Serial1 pins are for SPI Flash
-// can't be used as is without remap, here use Serial2 GPIO16/17
+// can't be used as is without remap, here we'll use GPIO16/17
 HardwareSerial Serial1(1); // using Hardware UART Serial1 
+#define LORA_RX_PIN 17
+#define LORA_TX_PIN 16
 #define LORA_STREAM Serial1
 #define LORA_RESET 4
 
@@ -244,7 +246,12 @@ void loop()
     if (shouldUseBootloaderMode) {
         uint32_t startMS = millis();
 
-        LORA_STREAM.begin(bootloader.getDefaultBootloaderBaudRate());
+        #if defined(ARDUINO_ARCH_ESP32) 
+        // Remap RX1/TX1 on unused GPIO
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate(), SERIAL_8N1, LORA_RX_PIN, LORA_TX_PIN);
+        #else 
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
+        #endif
 
         sodaq_wdt_safe_delay(200);
         
@@ -292,8 +299,12 @@ void loop()
         LORA_STREAM.end();
         LORA_STREAM.flush();
 
-        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate(), SERIAL_8N1, 17, 16);
-        //Serial2.begin(9600, SERIAL_8N2, 16, 17)
+        #if defined(ARDUINO_ARCH_ESP32) 
+        // Remap RX1/TX1 on unused GPIO
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate(), SERIAL_8N1, LORA_RX_PIN, LORA_TX_PIN);
+        #else 
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
+        #endif
         sodaq_wdt_safe_delay(100);
 
         
