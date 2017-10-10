@@ -32,8 +32,8 @@ Connect RN2483 as follow (use Serial1 for RN2483 and Serial as debug/console)
 | :---: | :---: |
 | GND | GND |
 | 3V3 | 3V3 |
-| RX (GPIO17) | TX |
-| TX (GPIO16) | RX |
+| RX (GPIO35) | TX |
+| TX (GPIO25) | RX |
 | GPIO4 | Reset |
 
 Succesfully tested on [WeMos Lolin32](https://wiki.wemos.cc/products:lolin32:lolin32)
