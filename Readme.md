@@ -36,6 +36,7 @@ Connect RN2483 as follow (use Serial1 for RN2483 and Serial as debug/console)
 | TX (GPIO25) | RX |
 | GPIO4 | Reset |
 
+Please note that Hardware pins of Serial1 on ESP32 are used by SPI Flash so they can't be used as is without remap, I used GPIO25 and GPIO35 on my LoLin32 board but you can use other if needed. Just remember that on ESP32 GPIO > 33 are input only, so only RN2483 TX pin can use GPIO34 or GPIO35.
 
 Succesfully tested on [WeMos Lolin32](https://wiki.wemos.cc/products:lolin32:lolin32)
 
