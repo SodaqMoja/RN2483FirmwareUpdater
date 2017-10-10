@@ -36,6 +36,7 @@ Connect RN2483 as follow (use Serial1 for RN2483 and Serial as debug/console)
 | TX (GPIO25) | RX |
 | GPIO4 | Reset |
 
+
 Succesfully tested on [WeMos Lolin32](https://wiki.wemos.cc/products:lolin32:lolin32)
 
 ## Hex Image Selection
