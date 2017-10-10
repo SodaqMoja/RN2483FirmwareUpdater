@@ -38,11 +38,14 @@
 #define LORA_RESET 6
 
 #elif defined(ARDUINO_ARCH_ESP32) 
-// Serial1 on ESP32 default Serial1 pins are for SPI Flash
-// can't be used as is without remap, here we'll use GPIO16/17
-HardwareSerial Serial1(1); // using Hardware UART Serial1 
-#define LORA_RX_PIN 17
-#define LORA_TX_PIN 16
+// Serial1 on ESP32 default Serial1 pins are used by SPI Flash
+// can't be used as is without remap, here we'll use free GPIO
+HardwareSerial Serial1(1); // UART Serial1 
+// On my LOLIN32 board, I'm using this pin connected
+// to RN2483 module, but you can use other, remember
+// that GPIO >33 are input only, so only RN2483 TX pin can use them
+#define LORA_RX_PIN  25 // connected to ESP32 TXD1
+#define LORA_TX_PIN  35 // connected to ESP32 RXD1
 #define LORA_STREAM Serial1
 #define LORA_RESET 4
 
@@ -251,7 +254,7 @@ void loop()
 
         #if defined(ARDUINO_ARCH_ESP32) 
         // Remap RX1/TX1 on unused GPIO
-        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate(), SERIAL_8N1, LORA_RX_PIN, LORA_TX_PIN);
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate(), SERIAL_8N1, LORA_TX_PIN, LORA_RX_PIN);
         #else 
         LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
         #endif
@@ -304,7 +307,7 @@ void loop()
 
         #if defined(ARDUINO_ARCH_ESP32) 
         // Remap RX1/TX1 on unused GPIO
-        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate(), SERIAL_8N1, LORA_RX_PIN, LORA_TX_PIN);
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate(), SERIAL_8N1, LORA_TX_PIN, LORA_RX_PIN);
         #else 
         LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
         #endif
