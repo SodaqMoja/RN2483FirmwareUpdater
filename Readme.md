@@ -49,8 +49,8 @@ the firmware, to be used for updating the module:
 //#define HEXFILE_RN2483_103
 //#define HEXFILE_RN2903AU_097rc7
 //#define HEXFILE_RN2903_098
+//#define HEXFILE_RN2903_103
 ````
-
 You have to uncomment one of these lines to select the required firmware.
 
 ## Other Firmware
