@@ -10,6 +10,7 @@
 //#define HEXFILE_RN2483_103
 //#define HEXFILE_RN2903AU_097rc7
 //#define HEXFILE_RN2903_098
+//#define HEXFILE_RN2903_103
 
 #if defined(HEXFILE_RN2483_101)
 #include "HexFileImage2483_101.h"
@@ -19,8 +20,10 @@
 #include "HexFileImage2903AU_097rc7.h"
 #elif defined(HEXFILE_RN2903_098)
 #include "HexFileImage2903_098.h"
+#elif defined(HEXFILE_RN2903_103)
+#include "HexFileImage2903_103.h"
 #else
-#error "Please define one the the following: HEXFILE_RN2483_101, HEXFILE_RN2483_103, HEXFILE_RN2903AU_097rc7, HEXFILE_RN2903_098"
+#error "Please define one the the following: HEXFILE_RN2483_101, HEXFILE_RN2483_103, HEXFILE_RN2903AU_097rc7, HEXFILE_RN2903_098, , HEXFILE_RN2903_103"
 #endif
 
 

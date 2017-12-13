@@ -1,10 +1,44 @@
 # RN2483 Firmware Updater
 
+This fork is the same code than the original Sodaq code, we've just added the ability to flash
+RN2483, RN2903 devices from other boards, such as any Arduino Zero or cheap ESP32 boards.
+
 Note: to be able to compile this application you need to add the right board file to your Arduino IDE.
 
+# SODAQ Official Boards 
 Go to File, Preferences and set the following URL for the additional board files:
-
 http://downloads.sodaq.net/package_sodaq_samd_index.json
+
+# Arduino Zero Boards (Arduino, Adafruit, Sparkfun, ...)
+Go to Tools, Board, Boards Manager and add Arduino SAMD boards (32-bits ARM Cortex-M0+)
+Connect RN2483 as follow (use Serial for RN2483 and SerialUSB as debug/console)
+
+| Arduino Zero PIN | RN2483 pin |
+| :---: | :---: |
+| GND | GND |
+| 3V3 | 3V3 |
+| RX (D0) | TX |
+| TX (D1) | RX |
+| D6 | Reset |
+
+Succesfully tested on [RocketScream Mini Ultra Pro](http://www.rocketscream.com/blog/product/mini-ultra-pro-v2-with-radio/)
+
+# ESP32 Boards
+You need until official release to clone ESP32 [github](https://github.com/espressif/arduino-esp32) repository 
+You can follow procedure on [readme](https://github.com/espressif/arduino-esp32#installation-instructions).
+Connect RN2483 as follow (use Serial1 for RN2483 and Serial as debug/console)
+
+| ESP32 Pin | RN2483 pin |
+| :---: | :---: |
+| GND | GND |
+| 3V3 | 3V3 |
+| RX (GPIO35) | TX |
+| TX (GPIO25) | RX |
+| GPIO4 | Reset |
+
+Please note that Hardware pins of Serial1 on ESP32 are used by SPI Flash so they can't be used as is without remap, I used GPIO25 and GPIO35 on my LoLin32 board but you can use other if needed. Just remember that on ESP32 GPIO > 33 are input only, so only RN2483 TX pin can use GPIO34 or GPIO35.
+
+Succesfully tested on [WeMos Lolin32](https://wiki.wemos.cc/products:lolin32:lolin32)
 
 ## Hex Image Selection
 
@@ -15,8 +49,8 @@ the firmware, to be used for updating the module:
 //#define HEXFILE_RN2483_103
 //#define HEXFILE_RN2903AU_097rc7
 //#define HEXFILE_RN2903_098
+//#define HEXFILE_RN2903_103
 ````
-
 You have to uncomment one of these lines to select the required firmware.
 
 ## Other Firmware

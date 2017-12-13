@@ -10,6 +10,10 @@
 #define RN2483_BOOTLOADER_INPUT_BUFFER_SIZE 128
 #define RN2483_BOOTLOADER_DEFAULT_TIMEOUT 120
 
+#if defined (ARDUINO_ARCH_ESP32)
+#define Uart HardwareSerial
+#endif
+
 struct BootloaderRecord {
     uint8_t AutoBaudChar;
     uint8_t Command;

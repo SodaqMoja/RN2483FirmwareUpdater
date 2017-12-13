@@ -10,13 +10,45 @@
 
 #define DEBUG_SYMBOLS_ON
 
+
+#if defined (ARDUINO_SAMD_ZERO)
+#define CONSOLE_STREAM SerialUSB
+#define DEBUG_STREAM SerialUSB
+
+#elif defined (ARDUINO_ARCH_ESP32)
+#define CONSOLE_STREAM Serial
+#define DEBUG_STREAM Serial
+
+#else
 #define CONSOLE_STREAM SERIAL_PORT_MONITOR
 #define DEBUG_STREAM SERIAL_PORT_MONITOR
+#endif
 
+// keep testing SODAQ boards at the begining s
 #if defined(ARDUINO_SODAQ_EXPLORER)
 #define LORA_STREAM Serial2
+
+// keep testing SODAQ boards at the begining since they can also be Zero boards
 #elif defined(ARDUINO_SODAQ_AUTONOMO) || defined(ARDUINO_SODAQ_ONE) || defined(ARDUINO_SODAQ_ONE_BETA)
 #define LORA_STREAM Serial1
+
+// Now other Zero boards
+#elif defined(ARDUINO_SAMD_ZERO) 
+#define LORA_STREAM Serial
+#define LORA_RESET 6
+
+#elif defined(ARDUINO_ARCH_ESP32) 
+// Serial1 on ESP32 default Serial1 pins are used by SPI Flash
+// can't be used as is without remap, here we'll use free GPIO
+HardwareSerial Serial1(1); // UART Serial1 
+// On my LOLIN32 board, I'm using this pin connected
+// to RN2483 module, but you can use other, remember
+// that GPIO >33 are input only, so only RN2483 TX pin can use them
+#define LORA_RX_PIN  25 // connected to ESP32 TXD1
+#define LORA_TX_PIN  35 // connected to ESP32 RXD1
+#define LORA_STREAM Serial1
+#define LORA_RESET 4
+
 #endif
 
 #ifdef DEBUG_SYMBOLS_ON
@@ -123,25 +155,43 @@ void setup()
 
     #if defined(LORA_RESET)
     pinMode(LORA_RESET, OUTPUT);
-    digitalWrite(LORA_RESET, HIGH);
-    sodaq_wdt_safe_delay(100);
     digitalWrite(LORA_RESET, LOW);
     sodaq_wdt_safe_delay(100);
     digitalWrite(LORA_RESET, HIGH);
     sodaq_wdt_safe_delay(100);
     #endif
 
+    #if defined (ARDUINO_ARCH_ESP32)
+        CONSOLE_STREAM.begin(115200);
+    #else
+
     sodaq_wdt_safe_delay(5000);
-    
+
     if (DEBUG_STREAM != CONSOLE_STREAM) {
         CONSOLE_STREAM.begin(115200);
     }
+    #endif
     
-    consolePrintln("** SODAQ Firmware Updater **");
+    consolePrint("** ");
+
+#if defined(HEXFILE_RN2483_101)
+    consolePrint("RN2483 V1.0.1");
+#elif defined(HEXFILE_RN2483_103)
+    consolePrint("RN2483 V1.0.3");
+#elif defined(HEXFILE_RN2903AU_097rc7)
+    consolePrint("RN2903 V0.9.7");
+#elif defined(HEXFILE_RN2903_098)
+    consolePrint("RN2903 V0.9.8");
+#else
+    consolePrint("Unknown");
+#endif
+
+    consolePrintln(" Firmware Updater **");
     consolePrint("Version ");
     consolePrint(VersionMajor);
     consolePrint(".");
     consolePrintln(VersionMinor);
+
     
     consolePrintln("\nPress:");
     consolePrintln(" - \'b\' to enable bootloader mode");
@@ -201,8 +251,14 @@ void loop()
 {
     if (shouldUseBootloaderMode) {
         uint32_t startMS = millis();
-        
-        LORA_STREAM.begin(bootloader.getDefaultBootloaderBaudRate());
+
+        #if defined(ARDUINO_ARCH_ESP32) 
+        // Remap RX1/TX1 on unused GPIO
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate(), SERIAL_8N1, LORA_TX_PIN, LORA_RX_PIN);
+        #else 
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
+        #endif
+
         sodaq_wdt_safe_delay(200);
         
         BootloaderVersionInfo versionInfo;
@@ -237,16 +293,26 @@ void loop()
         consolePrintln("Elapsed Time: " + String((float)(millis() - startMS) / 1000) + "s");
     }
     else {
+
         #if defined(LORA_RESET)
+        consolePrint("Reseting module with PIN ");
+        consolePrintln(LORA_RESET);
         digitalWrite(LORA_RESET, LOW);
         sodaq_wdt_safe_delay(100);
         digitalWrite(LORA_RESET, HIGH);
         sodaq_wdt_safe_delay(1000);
         #endif
         LORA_STREAM.end();
-        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
-        sodaq_wdt_safe_delay(100);
         LORA_STREAM.flush();
+
+        #if defined(ARDUINO_ARCH_ESP32) 
+        // Remap RX1/TX1 on unused GPIO
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate(), SERIAL_8N1, LORA_TX_PIN, LORA_RX_PIN);
+        #else 
+        LORA_STREAM.begin(bootloader.getDefaultApplicationBaudRate());
+        #endif
+        sodaq_wdt_safe_delay(100);
+
         
         char applicationResetResponse[64];
         if (bootloader.applicationReset(applicationResetResponse, sizeof(applicationResetResponse))) {
@@ -268,6 +334,7 @@ void loop()
         }
         else {
             consolePrintln("The module did not respond in application mode. Please unplug and retry in bootloader mode.");
+            consolePrintln(applicationResetResponse);
         }
     }
 }
