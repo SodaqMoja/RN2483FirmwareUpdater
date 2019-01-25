@@ -8,7 +8,9 @@
 // Uncomment one of the following, and one only, not more, not less.
 //#define HEXFILE_RN2483_101
 //#define HEXFILE_RN2483_103
+//#define HEXFILE_RN2483_104A
 //#define HEXFILE_RN2483_104
+//#define HEXFILE_RN2483_105
 //#define HEXFILE_RN2903AU_097rc7
 //#define HEXFILE_RN2903_098
 //#define HEXFILE_RN2903_103
@@ -19,8 +21,12 @@
 #include "HexFileImage2483_101.h"
 #elif defined(HEXFILE_RN2483_103)
 #include "HexFileImage2483_103.h"
+#elif defined(HEXFILE_RN2483_104A)
+#include "HexFileImage2483_104A.h"
 #elif defined(HEXFILE_RN2483_104)
 #include "HexFileImage2483_104.h"
+#elif defined(HEXFILE_RN2483_105)
+#include "HexFileImage2483_105.h"
 #elif defined(HEXFILE_RN2903AU_097rc7)
 #include "HexFileImage2903AU_097rc7.h"
 #elif defined(HEXFILE_RN2903_098)
