@@ -14,6 +14,7 @@
 //#define HEXFILE_RN2903AU_097rc7
 //#define HEXFILE_RN2903_098
 //#define HEXFILE_RN2903_103
+//#define HEXFILE_RN2903_105
 //#define HEXFILE_RN2903_SA103
 //#define HEXFILE_RN2903_AS923_105
 
@@ -33,6 +34,8 @@
 #include "HexFileImage2903_098.h"
 #elif defined(HEXFILE_RN2903_103)
 #include "HexFileImage2903_103.h"
+#elif defined(HEXFILE_RN2903_105)
+#include "HexFileImage2903_105.h"
 #elif defined(HEXFILE_RN2903_SA103)
 #include "HexFileImage2903_SA103.h"
 #elif defined(HEXFILE_RN2903_AS923_105)
